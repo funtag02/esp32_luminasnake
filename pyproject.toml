@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "luminasnake-pc"
+version = "0.1.0"
+description = "Synchronized desktop audio analysis and RGB streaming for LuminaSnake"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "numpy>=2.0,<3",
+  "platformdirs>=4.2,<5",
+  "pyserial>=3.5,<4",
+  "PySide6>=6.7,<7",
+  "scipy>=1.13,<2",
+  "soundcard>=0.4.3,<0.5",
+  "soundfile>=0.12,<0.14",
+]
+
+[project.scripts]
+luminasnake-pc = "luminasnake_pc.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/luminasnake_pc"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = ["pytest>=8.2,<9", "ruff>=0.6,<1"]
