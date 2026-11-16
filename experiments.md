@@ -1,6 +1,6 @@
 # Signal-Processing and Rendering Experiments
 
-Last updated: 2026-10-27
+Last updated: 2026-11-16
 
 ## Goal and scope
 
@@ -103,14 +103,77 @@ Track names mentioned in discussion (for example *Closer* or *Air*) are personal
 
 **Question:** What does the current version actually do in the reference passages?
 
-**Procedure:**
+**Purpose:** document current behavior before changing analysis or rendering code. E0 is the reference against which later variants are compared; it is not itself an algorithm change.
 
-1. Keep the current settings and use simulation only.
-2. Try a piano/vocal intro, a build-up with claps/synths, a DnB drop, and a calm/acoustic passage.
-3. For each passage, separately observe the spectrum, dominant marker, head color, and five simulations.
-4. Note visible values (dBFS, dominant frequency, onsets) alongside what stands out subjectively.
+#### E0 test protocol
 
-**Expected result:** a reproducible list of cases and perceptual goals, not an algorithm change yet.
+1. Use simulation only. Record the application revision, audio source, sample rate if known, input gain, analyzer/render settings, and selected simulation mode. Do not change these during an A/B comparison.
+2. Use the same local audio source and exact time range for every run. Do not normalize or otherwise process the source between runs.
+3. For each passage, capture the visualizer, dominant marker, Full-mode strip, and the five simulations. Record displayed dBFS and dominant frequency at the same checkpoints; note whether the value is instantaneous or an estimate.
+4. Choose three checkpoints per passage: before the target event (if applicable), during its onset, and during the sustained passage. Record the target heard by ear before judging the rendering.
+5. Rate the intended element's visibility and unwanted bass masking using the rubric below. Keep the notes and screenshots for the baseline and every later variant.
+
+**Listening rubric**
+
+| Score | Target element visibility | Unwanted bass / sub-bass masking |
+|---|---|---|
+| 0 | Not distinguishable in the rendering | No meaningful masking |
+| 1 | Intermittent or weak | Present but does not obscure the intended element |
+| 2 | Clearly present, but less prominent than intended | Frequently competes with or obscures the intended element |
+| 3 | Clearly visible with the intended prominence | Dominates although it is not the intended focus |
+
+Use the numbers to compare the same passage across variants, not as an objective measure of musical quality. Also note the specific failure (for example, Full stays red, hats fail to appear, or strings are absent); the score alone is not enough.
+
+#### Reference passage matrix
+
+The following are user-reported first-pass observations. They are valuable leads, not controlled measurements: settings and checkpoints were not consistently recorded. Fill the empty fields during the controlled baseline run.
+
+| ID / source | Passage | Heard target / intent | First-pass analyzer and rendering observation | dBFS | Baseline checkpoint readings and rubric |
+|---|---|---|---|---|---|
+| M1 — Sub Focus, “Siren” | 0:00–0:20, before rolling techno-style bass enters | Hats/rides and snares; no need to emphasize sub-bass | No high-mid activity observed; Full was all red across bass/low-mid. Hats/rides and snares were detected very well. The passage became more chaotic after 0:20. | About -30 on average | To record: exact settings, three timestamps, dominant Hz, band display, Full color, five simulations, target-visibility and masking scores. |
+| M2 — Sub Focus, “Siren” | 0:43–1:03 | Heavy bass synth in the drop; keep its audible prominence distinct from sub-bass | Low-mid activity followed the heavy bass synth in time and relative to itself, but looked weaker than it sounded. Dominant stayed in bass, around 47 Hz on average. | About -19 when the synth was playing; about -24 when it was not, with other drop elements also contributing | To record: exact settings, three timestamps, low-mid and bass display, Full color, five simulations, target-visibility and masking scores. |
+| M3 — John Summit & Sub Focus, “Go Back” | 0:50–1:00 | Drums should stand out more than the comparatively subtle bass | Full was all red. High drums were missing or poorly detected despite being much more perceptually prominent than the bass. | About -18 to -22 dBFS for this passage only | To record: exact settings, three timestamps, high-band display, Full color, five simulations, drum visibility and bass-masking scores. |
+| M4 — Netsky & Hybrid Minds, “Let Me Hold You” | Stages: piano only; piano + vocals; pad build-up; drop | Drums and audible string parts should be represented; ideally the strings should have a distinguishable display | Drums were detected but the display felt chaotic. Full was all red. The strings were audible but not detected as a distinct element. Reported levels by stage: piano only ~-30 dBFS; piano + vocals ~-25 dBFS; pad build-up ~-21 dBFS; drop ~-18 to -20 dBFS. The desired behavior is to represent the strings, not necessarily classify the instrument by name. | As reported above; verify in controlled run | For each stage, record its timestamp, exact settings, three checkpoints, mid/high-band display, Full color, five simulations, drum/string visibility and bass-masking scores. |
+| M5 — Fisher, “Atmosphere” (parked; lower priority) | House drop / sections where kick and bass interact; exact stage boundaries TBD | Open hats should remain visible alongside the kick and bass | All observed open hats were detected. Bass readings around 47–189 Hz dominated after the drop, though less problematically than in DnB. Possible explanations are kick/bass sidechain interaction or bass notes filling gaps between kicks; neither is verified. | Do not use dBFS as a comparison criterion; reported values varied roughly -16 to -32 across stages. | Keep as a qualitative, lower-priority comparison. If revisited, label the musical stages and record exact checkpoints and the perceived kick/bass relationship. |
+| M6 — Circadian, “Energy in Motion (AMC Remix)” | Intro 0:00–0:20; pre-build-up 0:21–0:44; build-up; drop 1:18–1:28 | In the drop, show the main bass/synth without letting the low bass mask it; drums also matter | Intro: average dominant ~100 Hz; Full nearly all red, with some drums missed. Pre-build-up: dominant ~47–100 Hz; Full all red with variations from drums/synths, attributed to a mild sidechain effect. Build-up: no notable issue reported; bass dominance seems expected. Drop: main bass/synth appeared on low-mid and high-mid bands and was detected roughly 70–80% of the time, but seemed too weak and attenuated by bass. Dominant reading ranged ~47–248 Hz. | Not recorded | For each listed stage, record exact settings, three checkpoints, band display, Full color, five simulations, main-synth/drum visibility and bass-masking scores. |
+
+#### Isolated-sound observations
+
+These readings help check the analyzer but do not by themselves establish which sound should control Full mode.
+
+| Source | First-pass observation | Follow-up needed |
+|---|---|---|
+| Vital init preset (saw wave) | Dominant frequency: C0 ~23 Hz, C4 ~129 Hz, C7 ~527 Hz. The highest tested note was not identified; its reading was ~12,539 Hz. Level was about -19.1 dBFS across octaves 2–8 and about -21 dBFS for the highest notes. | Record note names, MIDI notes if available, gain, and stable readings. |
+| FL Keys piano | C3 ~129 Hz. C7 fluctuated between ~1,043 and 2,109 Hz. Highest note B10 read ~12,574 Hz. | Repeat at fixed note duration and gain. |
+| Hi-hat / DnB top loop | Hi-hat around 12 kHz; top-loop dominant readings above roughly 5–7 kHz. | Record the source, exact loop, and whether the value is the dominant marker or a band measurement. |
+| Snare | Readings varied, roughly 250 Hz–2 kHz. | Repeat with several fixed hits and distinguish peak from sustained reading. |
+| Kick | Most reported dominant readings were below 354 Hz, sometimes higher depending on the sound. A reported range of roughly 17.3–35 Hz needs clarification. | Determine whether 17.3–35 Hz refers to a spectral peak, filter setting, or another display; the analyzer's documented dominant-frequency search starts at 20 Hz. |
+| Vocal | Some vocal readings appeared between about 707 Hz and 1.4 kHz, including female voices. | Record the excerpt, note whether the reading is fundamental or a harmonic, and do not infer gender or source identity from frequency alone. |
+
+With silence, the level read about -120 dBFS. Notes were reported between roughly -25 and -75 dBFS, more often around -25 to -35 dBFS; octave changes did not appear to affect the level much. The dominant marker appeared to match the visual color consistently. Verify these observations with the same gain and record whether a value is a momentary reading or a time summary.
+
+#### Cross-passage priorities to test
+
+- The listener currently prefers not to visualize sub-bass because it is often part of the visual problem. Treat this as a preference to test, not a decision to remove low-frequency analysis.
+- For liquid DnB, drums and pads are often the main visual priorities.
+- A persistent ~47 Hz dominant reading should not automatically outweigh audible drums, pads, or strings. It is not yet known whether it is the bass fundamental, a harmonic, or another persistent component.
+- Existing red color or dominant-frequency readings are not evidence that the bass is the most perceptually important element.
+
+#### Deferred objectives (outside the current experiment focus)
+
+- **Drum/instrument separation:** the long-term goal is to distinguish drums from instruments and synths. Defer source-separation work until after the current analysis and rendering experiments; it is not the main focus now.
+- **Pitch movement within an octave:** a later goal is to show that an instrument played a higher note within the same octave. The current model is not expected to make that pitch difference perceptible on the LED strip. Defer this objective and *Friction — “Set Me Free”* as a test passage for it; do not mix it into the current bass/salience experiments.
+
+#### Experiment log template
+
+Use one row per passage, variant, and checkpoint. Keep the original baseline row rather than overwriting it.
+
+| Run / variant | Passage ID and checkpoint | Build / settings / input gain | Change from baseline | dBFS / dominant Hz | Band values or screenshot | Intended element visibility (0–3) | Bass masking (0–3) | Full color / simulations / stability | Decision and notes |
+|---|---|---|---|---|---|---:|---:|---|---|
+| Baseline / A | M__ / before, onset, or sustained | Record exact values | None | Record | Attach or describe | Score | Score | Record | Reference |
+| Candidate / B | M__ / same checkpoint as A | Record exact values | One change family only | Record | Attach or describe | Score | Score | Record | Keep / reject / revisit |
+
+For each experiment E1–E8, copy the same passage IDs and checkpoints into the log. Change one parameter family at a time, compare A and B on the same input, and note tests and decision criteria from that experiment. This makes changes in measurement, color selection, and subjective salience separately traceable.
 
 ### E1 — Improve how the spectrum bars are interpreted
 
